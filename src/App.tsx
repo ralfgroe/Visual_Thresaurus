@@ -78,23 +78,24 @@ function AppInner() {
 
       <NodeTooltip node={hoveredNode} position={hoverPos} />
 
-      {graphData.nodes.length > 0 && <Legend />}
-
-      {graphData.nodes.length > 0 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-600/30 rounded-full px-4 py-1.5 shadow-lg">
-            <span className="text-[11px] text-slate-500">
-              {graphData.nodes.length} words &middot; {graphData.edges.length} connections
-            </span>
+      {/* Unified bottom bar */}
+      <div className="absolute bottom-4 left-88 right-4 z-50 animate-fade-in">
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-600/30 rounded-xl px-4 py-2.5 shadow-lg flex items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            {graphData.nodes.length > 0 && <Legend />}
+            {graphData.nodes.length > 0 && (
+              <span className="text-[11px] text-slate-500">
+                {graphData.nodes.length} words &middot; {graphData.edges.length} connections
+              </span>
+            )}
           </div>
+          <SettingsPanel
+            onOpenApiKey={() => setShowKeyModal(true)}
+            onClearGraph={handleClearGraph}
+            hasNodes={graphData.nodes.length > 0}
+          />
         </div>
-      )}
-
-      <SettingsPanel
-        onOpenApiKey={() => setShowKeyModal(true)}
-        onClearGraph={handleClearGraph}
-        hasNodes={graphData.nodes.length > 0}
-      />
+      </div>
 
       {error && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
