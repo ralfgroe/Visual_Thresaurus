@@ -152,45 +152,25 @@ export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Prop
     }));
 
     graph.graphData({
-      nodes: graphData.nodes.map((n: WordNode) => ({ ...n })),
+      nodes: graphData.nodes.map((n: WordNode) => {
+        const copy: any = { ...n };
+        if (n.id === centerId) {
+          copy.fx = 0;
+          copy.fy = 0;
+          copy.fz = 0;
+        }
+        return copy;
+      }),
       links,
     });
 
     if (centerId) {
-      setTimeout(() => {
-        const centerNode = graphData.nodes.find((n: WordNode) => n.id === centerId) as GraphNode | undefined;
-        const allNodes = graph.graphData().nodes as GraphNode[];
-        const liveNode = allNodes.find((n: GraphNode) => n.id === centerId);
-        const target = liveNode || centerNode;
+      graph.cameraPosition({ x: 0, y: 0, z: 120 }, { x: 0, y: 0, z: 0 }, 800);
 
-        if (target && target.x != null) {
-          const lookAt = { x: target.x, y: target.y || 0, z: target.z || 0 };
-          const dist = 80;
-          const camPos = graph.cameraPosition();
-          const dx = (camPos.x || 0) - lookAt.x;
-          const dy = (camPos.y || 0) - lookAt.y;
-          const dz = (camPos.z || 0) - lookAt.z;
-          const currentDist = Math.sqrt(dx * dx + dy * dy + dz * dz) || dist;
-          const ratio = dist / currentDist;
-
-          graph.cameraPosition(
-            {
-              x: lookAt.x + dx * ratio,
-              y: lookAt.y + dy * ratio,
-              z: lookAt.z + dz * ratio,
-            },
-            lookAt,
-            800,
-          );
-
-          const controls = graph.controls();
-          if (controls && 'target' in controls) {
-            controls.target.set(lookAt.x, lookAt.y, lookAt.z);
-          }
-        } else {
-          graph.zoomToFit(600, 40);
-        }
-      }, 500);
+      const controls = graph.controls();
+      if (controls && 'target' in controls) {
+        controls.target.set(0, 0, 0);
+      }
     }
   }, [graphData]);
 
