@@ -1,11 +1,12 @@
 import type { WordNode, WordEdge } from './types';
 
-const SYSTEM_PROMPT = `You are a thesaurus. Return valid JSON only, no other text.`;
+const SYSTEM_PROMPT = `You are a thesaurus API. You ONLY return raw JSON objects. Never use markdown, code fences, or explanations.`;
 
 function buildUserPrompt(word: string): string {
-  return `Word: "${word}"
-Return JSON: {"word":"${word}","meanings":[{"partOfSpeech":"noun","definition":"short def","relatedWords":[{"word":"x","partOfSpeech":"noun","relation":"synonym","definition":"short def"}]}]}
-Rules: 2-3 meanings max. 4-6 related words per meaning. 10-15 total. partOfSpeech: noun/verb/adjective/adverb. relation: synonym/antonym/hypernym/hyponym/related. Definitions under 6 words. JSON only.`;
+  return `Return a JSON object for the word "${word}" with this structure:
+{"word":"${word}","meanings":[{"partOfSpeech":"noun","definition":"brief def","relatedWords":[{"word":"example","partOfSpeech":"noun","relation":"synonym","definition":"brief def"}]}]}
+
+Include 2-3 meanings. 4-5 related words each. partOfSpeech: noun, verb, adjective, or adverb. relation: synonym, antonym, or related. Definitions under 6 words.`;
 }
 
 interface ClaudeResponse {
@@ -44,9 +45,20 @@ export function parseClaudeResponse(
 ): { nodes: WordNode[]; edges: WordEdge[]; centerId: string } | null {
   try {
     let jsonStr = raw.trim();
+
+    // Strip markdown fences if present
     const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (fenceMatch) {
       jsonStr = fenceMatch[1].trim();
+    }
+
+    // Try to find a JSON object if there's extra text around it
+    if (!jsonStr.startsWith('{')) {
+      const braceStart = jsonStr.indexOf('{');
+      const braceEnd = jsonStr.lastIndexOf('}');
+      if (braceStart !== -1 && braceEnd > braceStart) {
+        jsonStr = jsonStr.slice(braceStart, braceEnd + 1);
+      }
     }
 
     const data: ClaudeResponse = JSON.parse(jsonStr);
