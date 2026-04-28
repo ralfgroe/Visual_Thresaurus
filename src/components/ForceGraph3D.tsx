@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import ForceGraph3D from '3d-force-graph';
+import ForceGraph3DLib from '3d-force-graph';
+import type { ForceGraph3DInstance } from '3d-force-graph';
 import { SpriteText } from './SpriteText';
 import { useGraph } from '../hooks/useGraphStore';
 import { POS_COLORS } from '../lib/types';
@@ -23,13 +24,16 @@ interface GraphLink {
   relation: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GraphInstance = ForceGraph3DInstance<any, any>;
+
 export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<ReturnType<typeof ForceGraph3D> | null>(null);
+  const graphRef = useRef<GraphInstance | null>(null);
   const graphData = useGraph();
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
   const isUserInteracting = useRef(false);
-  const interactionTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const interactionTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const onNodeClickRef = useRef(onNodeClick);
   onNodeClickRef.current = onNodeClick;
@@ -47,7 +51,7 @@ export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Prop
   useEffect(() => {
     if (!containerRef.current || graphRef.current) return;
 
-    const graph = ForceGraph3D()(containerRef.current)
+    const graph = new ForceGraph3DLib(containerRef.current)
       .backgroundColor('rgba(0,0,0,0)')
       .showNavInfo(false)
       .linkSource('source')
