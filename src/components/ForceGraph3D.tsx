@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import ForceGraph3DLib from '3d-force-graph';
-import type { ForceGraph3DInstance } from '3d-force-graph';
 import { SpriteText } from './SpriteText';
 import { useGraph } from '../hooks/useGraphStore';
 import { POS_COLORS } from '../lib/types';
@@ -15,7 +14,6 @@ interface GraphNode extends WordNode {
   x?: number;
   y?: number;
   z?: number;
-  __threeObj?: object;
 }
 
 interface GraphLink {
@@ -24,12 +22,11 @@ interface GraphLink {
   relation: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type GraphInstance = ForceGraph3DInstance<any, any>;
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<GraphInstance | null>(null);
+  const graphRef = useRef<any>(null);
   const graphData = useGraph();
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
   const isUserInteracting = useRef(false);
@@ -51,7 +48,9 @@ export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Prop
   useEffect(() => {
     if (!containerRef.current || graphRef.current) return;
 
-    const graph = new ForceGraph3DLib(containerRef.current)
+    const graph: any = new ForceGraph3DLib(containerRef.current);
+
+    graph
       .backgroundColor('rgba(0,0,0,0)')
       .showNavInfo(false)
       .linkSource('source')
@@ -97,14 +96,10 @@ export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Prop
       .cooldownTicks(150);
 
     const chargeForce = graph.d3Force('charge');
-    if (chargeForce && typeof (chargeForce as { strength?: (n: number) => void }).strength === 'function') {
-      (chargeForce as { strength: (n: number) => void }).strength(-60);
-    }
+    if (chargeForce?.strength) chargeForce.strength(-60);
 
     const linkForce = graph.d3Force('link');
-    if (linkForce && typeof (linkForce as { distance?: (n: number) => void }).distance === 'function') {
-      (linkForce as { distance: (n: number) => void }).distance(30);
-    }
+    if (linkForce?.distance) linkForce.distance(30);
 
     graph.width(dimensions.width).height(dimensions.height);
 
@@ -168,12 +163,11 @@ export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Prop
     }
   }, [graphData]);
 
-  // Gentle auto-rotation using orbit controls angle
   const animateRotation = useCallback(() => {
     const graph = graphRef.current;
     if (!graph || isUserInteracting.current || !graphData.nodes.length) return;
 
-    const controls = graph.controls() as { autoRotate?: boolean; autoRotateSpeed?: number };
+    const controls = graph.controls();
     if (controls && 'autoRotate' in controls) {
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.5;
@@ -184,12 +178,11 @@ export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Prop
     animateRotation();
   }, [animateRotation]);
 
-  // Pause auto-rotation during interaction
   useEffect(() => {
     const interval = setInterval(() => {
       const graph = graphRef.current;
       if (!graph) return;
-      const controls = graph.controls() as { autoRotate?: boolean; autoRotateSpeed?: number };
+      const controls = graph.controls();
       if (controls && 'autoRotate' in controls) {
         controls.autoRotate = !isUserInteracting.current && graphData.nodes.length > 0;
       }
