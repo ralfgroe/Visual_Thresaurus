@@ -158,8 +158,39 @@ export default function ForceGraph3DComponent({ onNodeClick, onNodeHover }: Prop
 
     if (centerId) {
       setTimeout(() => {
-        graph.zoomToFit(600, 40);
-      }, 400);
+        const centerNode = graphData.nodes.find((n: WordNode) => n.id === centerId) as GraphNode | undefined;
+        const allNodes = graph.graphData().nodes as GraphNode[];
+        const liveNode = allNodes.find((n: GraphNode) => n.id === centerId);
+        const target = liveNode || centerNode;
+
+        if (target && target.x != null) {
+          const lookAt = { x: target.x, y: target.y || 0, z: target.z || 0 };
+          const dist = 80;
+          const camPos = graph.cameraPosition();
+          const dx = (camPos.x || 0) - lookAt.x;
+          const dy = (camPos.y || 0) - lookAt.y;
+          const dz = (camPos.z || 0) - lookAt.z;
+          const currentDist = Math.sqrt(dx * dx + dy * dy + dz * dz) || dist;
+          const ratio = dist / currentDist;
+
+          graph.cameraPosition(
+            {
+              x: lookAt.x + dx * ratio,
+              y: lookAt.y + dy * ratio,
+              z: lookAt.z + dz * ratio,
+            },
+            lookAt,
+            800,
+          );
+
+          const controls = graph.controls();
+          if (controls && 'target' in controls) {
+            controls.target.set(lookAt.x, lookAt.y, lookAt.z);
+          }
+        } else {
+          graph.zoomToFit(600, 40);
+        }
+      }, 500);
     }
   }, [graphData]);
 

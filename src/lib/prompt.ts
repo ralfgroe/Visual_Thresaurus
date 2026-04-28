@@ -1,31 +1,11 @@
 import type { WordNode, WordEdge } from './types';
 
-const SYSTEM_PROMPT = `You are a linguistic expert. When given a word, you analyze its meanings and return related words in a structured JSON format. Always return valid JSON with no additional text.`;
+const SYSTEM_PROMPT = `You are a thesaurus. Return valid JSON only, no other text.`;
 
 function buildUserPrompt(word: string): string {
-  return `Analyze the word "${word}" and return a JSON object with this exact structure:
-
-{
-  "word": "${word}",
-  "meanings": [
-    {
-      "partOfSpeech": "noun",
-      "definition": "a short definition",
-      "relatedWords": [
-        { "word": "example", "partOfSpeech": "noun", "relation": "synonym", "definition": "short gloss" }
-      ]
-    }
-  ]
-}
-
-Rules:
-- Include ALL distinct meanings/senses of the word, each as a separate entry in "meanings"
-- For each meaning, include 4-8 related words
-- partOfSpeech must be one of: noun, verb, adjective, adverb
-- relation must be one of: synonym, antonym, hypernym, hyponym, related
-- Keep definitions concise (under 10 words)
-- Return 15-30 related words total across all meanings
-- Return ONLY the JSON object, no markdown fences or extra text`;
+  return `Word: "${word}"
+Return JSON: {"word":"${word}","meanings":[{"partOfSpeech":"noun","definition":"short def","relatedWords":[{"word":"x","partOfSpeech":"noun","relation":"synonym","definition":"short def"}]}]}
+Rules: 2-3 meanings max. 4-6 related words per meaning. 10-15 total. partOfSpeech: noun/verb/adjective/adverb. relation: synonym/antonym/hypernym/hyponym/related. Definitions under 6 words. JSON only.`;
 }
 
 interface ClaudeResponse {
@@ -138,7 +118,7 @@ export async function callClaude(
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 512,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: buildUserPrompt(word) }],
     }),
