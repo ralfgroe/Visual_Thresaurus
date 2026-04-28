@@ -131,8 +131,12 @@ export async function callClaude(
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 512,
+      temperature: 0,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildUserPrompt(word) }],
+      messages: [
+        { role: 'user', content: buildUserPrompt(word) },
+        { role: 'assistant', content: '{' },
+      ],
     }),
   });
 
@@ -147,8 +151,8 @@ export async function callClaude(
   );
   if (!textBlock) throw new Error('No text in response');
 
-  const parsed = parseClaudeResponse(textBlock.text);
-  if (!parsed) throw new Error('Failed to parse word data from response');
+  const parsed = parseClaudeResponse('{' + textBlock.text);
+  if (!parsed) throw new Error('Failed to parse: ' + textBlock.text.slice(0, 200));
 
   return parsed;
 }
