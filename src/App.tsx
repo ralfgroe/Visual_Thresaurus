@@ -2,13 +2,12 @@ import { useState, useCallback } from 'react';
 import { GraphProvider, useGraph, useGraphDispatch } from './hooks/useGraphStore';
 import { useClaude } from './hooks/useClaude';
 import ForceGraph3DComponent from './components/ForceGraph3D';
-import SearchBar from './components/SearchBar';
+import ChatPanel from './components/ChatPanel';
 import ApiKeyModal from './components/ApiKeyModal';
 import NodeTooltip from './components/NodeTooltip';
 import SettingsPanel from './components/SettingsPanel';
 import Legend from './components/Legend';
 import EmptyState from './components/EmptyState';
-import LoadingOverlay from './components/LoadingOverlay';
 import type { WordNode } from './lib/types';
 
 function AppInner() {
@@ -58,6 +57,7 @@ function AppInner() {
 
   const handleClearGraph = useCallback(() => {
     dispatch({ type: 'CLEAR' });
+    setCurrentWord('');
   }, [dispatch]);
 
   return (
@@ -69,9 +69,12 @@ function AppInner() {
 
       {graphData.nodes.length === 0 && !loading && <EmptyState />}
 
-      <LoadingOverlay loading={loading} word={currentWord} />
-
-      <SearchBar onSearch={handleSearch} loading={loading} />
+      <ChatPanel
+        apiKey={apiKey}
+        centerWord={currentWord}
+        onSearch={handleSearch}
+        graphLoading={loading}
+      />
 
       <NodeTooltip node={hoveredNode} position={hoverPos} />
 
