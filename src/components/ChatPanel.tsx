@@ -29,19 +29,50 @@ export default function ChatPanel({ apiKey, centerWord, onSearch, graphLoading }
   }, [messages]);
 
   useEffect(() => {
-    if (centerWord) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `sys-${Date.now()}`,
-          role: 'system',
-          content: centerWord,
-          timestamp: Date.now(),
-          isWordSearch: true,
-        },
-      ]);
-    }
-  }, [centerWord]);
+    if (!centerWord || !apiKey) return;
+
+    const sysMsg: ChatMessage = {
+      id: `sys-${Date.now()}`,
+      role: 'system',
+      content: centerWord,
+      timestamp: Date.now(),
+      isWordSearch: true,
+    };
+    setMessages((prev) => [...prev, sysMsg]);
+    setChatLoading(true);
+
+    let cancelled = false;
+    chatWithClaude(apiKey, centerWord, `Define "${centerWord}" briefly.`, [])
+      .then((reply) => {
+        if (cancelled) return;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `def-${Date.now()}`,
+            role: 'assistant',
+            content: reply,
+            timestamp: Date.now(),
+          },
+        ]);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `err-${Date.now()}`,
+            role: 'assistant',
+            content: `Error: ${e instanceof Error ? e.message : 'Unknown error'}`,
+            timestamp: Date.now(),
+          },
+        ]);
+      })
+      .finally(() => {
+        if (!cancelled) setChatLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [centerWord, apiKey]);
 
   const submit = useCallback(async () => {
     const trimmed = input.trim();

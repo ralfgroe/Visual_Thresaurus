@@ -8,6 +8,7 @@ import NodeTooltip from './components/NodeTooltip';
 import SettingsPanel from './components/SettingsPanel';
 import Legend from './components/Legend';
 import EmptyState from './components/EmptyState';
+import QuickstartGuide from './components/QuickstartGuide';
 import type { WordNode } from './lib/types';
 
 function AppInner() {
@@ -16,6 +17,7 @@ function AppInner() {
   const [hoveredNode, setHoveredNode] = useState<WordNode | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [currentWord, setCurrentWord] = useState<string>('');
+  const [showGuide, setShowGuide] = useState(false);
 
   const graphData = useGraph();
   const dispatch = useGraphDispatch();
@@ -67,7 +69,7 @@ function AppInner() {
         onNodeHover={handleNodeHover}
       />
 
-      {graphData.nodes.length === 0 && !loading && <EmptyState />}
+      {graphData.nodes.length === 0 && !loading && <EmptyState onQuickstart={() => setShowGuide(true)} />}
 
       <ChatPanel
         apiKey={apiKey}
@@ -119,6 +121,8 @@ function AppInner() {
         onClose={() => setShowKeyModal(false)}
         hasExistingKey={!!apiKey}
       />
+
+      <QuickstartGuide open={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 }
